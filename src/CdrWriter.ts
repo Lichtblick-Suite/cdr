@@ -70,91 +70,91 @@ export class CdrWriter {
     this.origin = 4;
   }
 
-  int8(value: number): CdrWriter {
+  int8(value: number): this {
     this.resizeIfNeeded(1);
     this.view.setInt8(this.offset, value);
     this.offset += 1;
     return this;
   }
 
-  uint8(value: number): CdrWriter {
+  uint8(value: number): this {
     this.resizeIfNeeded(1);
     this.view.setUint8(this.offset, value);
     this.offset += 1;
     return this;
   }
 
-  int16(value: number): CdrWriter {
+  int16(value: number): this {
     this.align(2);
     this.view.setInt16(this.offset, value, this.littleEndian);
     this.offset += 2;
     return this;
   }
 
-  uint16(value: number): CdrWriter {
+  uint16(value: number): this {
     this.align(2);
     this.view.setUint16(this.offset, value, this.littleEndian);
     this.offset += 2;
     return this;
   }
 
-  int32(value: number): CdrWriter {
+  int32(value: number): this {
     this.align(4);
     this.view.setInt32(this.offset, value, this.littleEndian);
     this.offset += 4;
     return this;
   }
 
-  uint32(value: number): CdrWriter {
+  uint32(value: number): this {
     this.align(4);
     this.view.setUint32(this.offset, value, this.littleEndian);
     this.offset += 4;
     return this;
   }
 
-  int64(value: bigint): CdrWriter {
+  int64(value: bigint): this {
     this.align(this.eightByteAlignment, 8);
     this.view.setBigInt64(this.offset, value, this.littleEndian);
     this.offset += 8;
     return this;
   }
 
-  uint64(value: bigint): CdrWriter {
+  uint64(value: bigint): this {
     this.align(this.eightByteAlignment, 8);
     this.view.setBigUint64(this.offset, value, this.littleEndian);
     this.offset += 8;
     return this;
   }
 
-  uint16BE(value: number): CdrWriter {
+  uint16BE(value: number): this {
     this.align(2);
     this.view.setUint16(this.offset, value, false);
     this.offset += 2;
     return this;
   }
 
-  uint32BE(value: number): CdrWriter {
+  uint32BE(value: number): this {
     this.align(4);
     this.view.setUint32(this.offset, value, false);
     this.offset += 4;
     return this;
   }
 
-  uint64BE(value: bigint): CdrWriter {
+  uint64BE(value: bigint): this {
     this.align(this.eightByteAlignment, 8);
     this.view.setBigUint64(this.offset, value, false);
     this.offset += 8;
     return this;
   }
 
-  float32(value: number): CdrWriter {
+  float32(value: number): this {
     this.align(4);
     this.view.setFloat32(this.offset, value, this.littleEndian);
     this.offset += 4;
     return this;
   }
 
-  float64(value: number): CdrWriter {
+  float64(value: number): this {
     this.align(this.eightByteAlignment, 8);
     this.view.setFloat64(this.offset, value, this.littleEndian);
     this.offset += 8;
@@ -162,7 +162,7 @@ export class CdrWriter {
   }
 
   // writeLength optional because it could already be included in a header
-  string(value: string, writeLength = true): CdrWriter {
+  string(value: string, writeLength = true): this {
     const strlen = value.length;
     if (writeLength) {
       this.uint32(strlen + 1); // Add one for the null terminator
@@ -177,7 +177,7 @@ export class CdrWriter {
   /** Writes the delimiter header using object size
    * NOTE: changing endian-ness with a single CDR message is not supported
    */
-  dHeader(objectSize: number): CdrWriter {
+  dHeader(objectSize: number): this {
     // DHEADER(O) = O.ssize
     const header = objectSize;
     this.uint32(header);
@@ -204,18 +204,13 @@ export class CdrWriter {
    * the serialization."
    * @returns - CdrWriter instance
    */
-  emHeader(
-    mustUnderstand: boolean,
-    id: number,
-    objectSize: number,
-    lengthCode?: number,
-  ): CdrWriter {
+  emHeader(mustUnderstand: boolean, id: number, objectSize: number, lengthCode?: number): this {
     return this.isCDR2
       ? this.memberHeaderV2(mustUnderstand, id, objectSize, lengthCode as LengthCode)
       : this.memberHeaderV1(mustUnderstand, id, objectSize);
   }
 
-  private memberHeaderV1(mustUnderstand: boolean, id: number, objectSize: number): CdrWriter {
+  private memberHeaderV1(mustUnderstand: boolean, id: number, objectSize: number): this {
     this.align(4);
     const mustUnderstandFlag = mustUnderstand ? 1 << 14 : 0;
     const shouldUseExtendedPID = id > 0x3f00 || objectSize > 0xffff;
@@ -244,7 +239,7 @@ export class CdrWriter {
   }
 
   /** Writes the PID_SENTINEL value if encapsulation supports it*/
-  sentinelHeader(): CdrWriter {
+  sentinelHeader(): this {
     if (!this.isCDR2) {
       this.align(4);
       this.uint16(SENTINEL_PID);
@@ -258,10 +253,10 @@ export class CdrWriter {
     id: number,
     objectSize: number,
     lengthCode?: LengthCode,
-  ): CdrWriter {
+  ): this {
     if (id > 0x0fffffff) {
       // first byte is used for M_FLAG and LC
-      throw Error(`Member ID ${id} is too large. Max value is ${0x0fffffff}`);
+      throw Error(`Member ID ${id} is too large. Max value is 268435455`);
     }
     // EMHEADER = (M_FLAG<<31) + (LC<<28) + M.id
     // M is the member of a structure
@@ -316,11 +311,11 @@ export class CdrWriter {
     return this;
   }
 
-  sequenceLength(value: number): CdrWriter {
+  sequenceLength(value: number): this {
     return this.uint32(value);
   }
 
-  int8Array(value: Int8Array | number[], writeLength?: boolean): CdrWriter {
+  int8Array(value: Int8Array | number[], writeLength?: boolean): this {
     if (writeLength === true) {
       this.sequenceLength(value.length);
     }
@@ -330,7 +325,7 @@ export class CdrWriter {
     return this;
   }
 
-  uint8Array(value: Uint8Array | number[], writeLength?: boolean): CdrWriter {
+  uint8Array(value: Uint8Array | number[], writeLength?: boolean): this {
     if (writeLength === true) {
       this.sequenceLength(value.length);
     }
@@ -340,7 +335,7 @@ export class CdrWriter {
     return this;
   }
 
-  int16Array(value: Int16Array | number[], writeLength?: boolean): CdrWriter {
+  int16Array(value: Int16Array | number[], writeLength?: boolean): this {
     if (writeLength === true) {
       this.sequenceLength(value.length);
     }
@@ -360,7 +355,7 @@ export class CdrWriter {
     return this;
   }
 
-  uint16Array(value: Uint16Array | number[], writeLength?: boolean): CdrWriter {
+  uint16Array(value: Uint16Array | number[], writeLength?: boolean): this {
     if (writeLength === true) {
       this.sequenceLength(value.length);
     }
@@ -380,7 +375,7 @@ export class CdrWriter {
     return this;
   }
 
-  int32Array(value: Int32Array | number[], writeLength?: boolean): CdrWriter {
+  int32Array(value: Int32Array | number[], writeLength?: boolean): this {
     if (writeLength === true) {
       this.sequenceLength(value.length);
     }
@@ -400,7 +395,7 @@ export class CdrWriter {
     return this;
   }
 
-  uint32Array(value: Uint32Array | number[], writeLength?: boolean): CdrWriter {
+  uint32Array(value: Uint32Array | number[], writeLength?: boolean): this {
     if (writeLength === true) {
       this.sequenceLength(value.length);
     }
@@ -420,7 +415,7 @@ export class CdrWriter {
     return this;
   }
 
-  int64Array(value: BigInt64Array | bigint[] | number[], writeLength?: boolean): CdrWriter {
+  int64Array(value: BigInt64Array | bigint[] | number[], writeLength?: boolean): this {
     if (writeLength === true) {
       this.sequenceLength(value.length);
     }
@@ -440,7 +435,7 @@ export class CdrWriter {
     return this;
   }
 
-  uint64Array(value: BigUint64Array | bigint[] | number[], writeLength?: boolean): CdrWriter {
+  uint64Array(value: BigUint64Array | bigint[] | number[], writeLength?: boolean): this {
     if (writeLength === true) {
       this.sequenceLength(value.length);
     }
@@ -460,7 +455,7 @@ export class CdrWriter {
     return this;
   }
 
-  float32Array(value: Float32Array | number[], writeLength?: boolean): CdrWriter {
+  float32Array(value: Float32Array | number[], writeLength?: boolean): this {
     if (writeLength === true) {
       this.sequenceLength(value.length);
     }
@@ -480,7 +475,7 @@ export class CdrWriter {
     return this;
   }
 
-  float64Array(value: Float64Array | number[], writeLength?: boolean): CdrWriter {
+  float64Array(value: Float64Array | number[], writeLength?: boolean): this {
     if (writeLength === true) {
       this.sequenceLength(value.length);
     }

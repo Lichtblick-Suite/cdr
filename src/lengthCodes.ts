@@ -22,7 +22,7 @@ export function getLengthCodeForObjectSize(objectSize: number): LengthCode {
     // Not currently supporting writing of lengthCodes > 4
     if (objectSize > 0xffffffff) {
       throw Error(
-        `Object size ${objectSize} for EMHEADER too large without specifying length code. Max size is ${0xffffffff}`,
+        `Object size ${objectSize} for EMHEADER too large without specifying length code. Max size is 4294967295`,
       );
     }
     defaultLengthCode = 4;

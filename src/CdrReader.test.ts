@@ -263,7 +263,9 @@ Object {
     writer.emHeader(false, 100, 4);
 
     const reader = new CdrReader(writer.data);
-    expect(() => reader.sentinelHeader()).toThrowError(/Expected sentinel_pid/i);
+    expect(() => {
+      reader.sentinelHeader();
+    }).toThrow(/Expected sentinel_pid/i);
   });
 
   it.each([[1], [2], [4], [8], [0x7fffffff]])(
@@ -350,5 +352,7 @@ function writeBigArray(writer: CdrWriter, setter: "int64" | "uint64", array: big
 
 function expectToBeCloseToArray(actual: number[], expected: number[], numDigits: number): void {
   expect(actual.length).toBe(expected.length);
-  actual.forEach((x, i) => expect(x).toBeCloseTo(expected[i]!, numDigits));
+  actual.forEach((x, i) => {
+    expect(x).toBeCloseTo(expected[i]!, numDigits);
+  });
 }
