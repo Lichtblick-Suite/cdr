@@ -20,9 +20,10 @@ export function getLengthCodeForObjectSize(objectSize: number): LengthCode {
 
   if (defaultLengthCode == undefined) {
     // Not currently supporting writing of lengthCodes > 4
-    if (objectSize > 0xffffffff) {
+    const maxSize = 0xffffffff;
+    if (objectSize > maxSize) {
       throw Error(
-        `Object size ${objectSize} for EMHEADER too large without specifying length code. Max size is 4294967295`,
+        `Object size ${objectSize} for EMHEADER too large without specifying length code. Max size is ${maxSize}`,
       );
     }
     defaultLengthCode = 4;
